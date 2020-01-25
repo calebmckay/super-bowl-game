@@ -7,14 +7,14 @@ const Question = require('../models/question');
 // Utils
 const evalFunctions = require('./eval');
 
-saveUpdate = async (id, updates) => {
-  const question = await Question.findOne({ questionId: id });
+const saveUpdate = async (gameId, questionId, updates) => {
+  const question = await Question.findOne({ gameId, questionId });
   const keys = Object.keys(updates);
   keys.forEach((key) => question[key] = updates[key]);
   await question.save();
 }
 
-update = async (gameId) => {
+const update = async (gameId) => {
   const url = `http://www.nfl.com/liveupdate/game-center/${gameId}/${gameId}_gtd.json`
   try {
     const request = await axios.get(url, { responseType: 'json' });
@@ -25,7 +25,7 @@ update = async (gameId) => {
       // Use the matching evalFunction to evaluate any updates needed for the database
       const updates = evalFunctions[`q${id}`](data);
       if (updates !== null) {
-        await saveUpdate(id, updates);
+        await saveUpdate(gameId, id, updates);
       }
     }
   } catch (e) {

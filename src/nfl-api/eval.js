@@ -1,11 +1,11 @@
-timestampToSeconds = (timestamp) => {
-  let minutes = timestamp.split(":")[0];
-  let seconds = timestamp.split(":")[1];
+const timestampToSeconds = (timestamp) => {
+  let minutes = parseInt(timestamp.split(":")[0]);
+  let seconds = parseInt(timestamp.split(":")[1]);
   return minutes*60 + seconds;
 }
 
-isFinal = (data) => {
-  return data.qtr.search(/[Ff]inal/g) !== -1;
+const isFinal = (data) => {
+  return data.qtr.search(/[Ff]inal/) !== -1;
 }
 
 let evalFunctions = {};
@@ -407,7 +407,6 @@ evalFunctions.q17 = (data) => {
 
   // Despite the slightly deceptive name, `data.${team}.stats.kicking.${player}.fgyards`
   // holds the player's longest FG. We'll use this to determine the answer.
-  // let homeVal = 0, awayVal = 0;
   let score = { home: 0, away: 0 };
   ['home', 'away'].forEach((team) => {
     const thisTeam = data[team];
@@ -556,7 +555,7 @@ evalFunctions.q23 = (data) => {
   let value = 0;
   Object.keys(data.scrsummary).forEach(function(key){
     const thisScore = data.scrsummary[key];
-    if (thisScore.type = "FG") {
+    if (thisScore.type === "FG") {
       const fgMatch = thisScore.desc.match(/\d+ yd\./);
       if (fgMatch.length > 0) {
         const fgLength = Number(fgMatch[0].split(' ')[0]);
@@ -606,10 +605,11 @@ evalFunctions.q26 = (data) => {
   // A note value of '2PS' is success, while a value of '2PPF' is failure
   let finalized = isFinal(data);
   let value = 0;
-  Object.keys(data.drives).forEach((driveNum) => {
+  // Use `some()` to break out of the loop as soon as we've found a 2PT conversion.
+  Object.keys(data.drives).some((driveNum) => {
     // The drives object has a pesky "crntdrv" (current drive) key, so let's skip it
     if(isNaN(driveNum)) {
-      return;
+      return false;
     }
     const thisDrive = data.drives[driveNum];
     Object.keys(thisDrive.plays).forEach((play) => {
@@ -617,6 +617,7 @@ evalFunctions.q26 = (data) => {
       if(thisPlay.note && thisPlay.note.match(/^2PS$/) !== null){
         finalized = true;
         value = 1;
+        return true;
       }
     });
   });
@@ -643,9 +644,47 @@ evalFunctions.q27 = (data) => {
 
 evalFunctions.q28 = (data) => {
   // 28 - Other than 0-0, will there be a tie at any point?
-  // TODO - not implemented
-  console.log('Q28 - Not implemented!!!!');
-  return null;
+  let finalized = isFinal(data);
+  let value = 0;
+
+  const homeAbbr = data.home.abbr;
+  const awayAbbr = data.away.abbr;
+  let score = {}
+  score[homeAbbr] = 0;
+  score[awayAbbr] = 0;
+
+  // Use `some()` to break out of the loop as soon as we've found a tie.
+  Object.keys(data.scrsummary).some((key) => {
+    const thisDrive = data.scrsummary[key];
+    switch (thisDrive.type) {
+      case 'TD':
+        score[thisDrive.team] += 6;
+        const driveDesc = thisDrive.desc.toLowerCase()
+        if (driveDesc.includes('kick is good')) {
+          score[thisDrive.team] += 1;
+        } else if (!driveDesc.includes('kick') && !driveDesc.includes('failed')){
+          const extraDesc = /\(.*\)/.exec(driveDesc)[0];
+          if (extraDesc.includes('pass') || extraDesc.includes('run')) {
+            score[thisDrive.team] += 2;
+          }
+        }
+        break;
+      case 'FG':
+        score[thisDrive.team] += 3;
+        break;
+      case 'SAF':
+        score[thisDrive.team] += 2;
+        break;
+    }
+
+    if (score[homeAbbr] === score[awayAbbr]) {
+      value = 1;
+      finalized = true;
+      return true;
+    }
+  });
+
+  return { value, finalized };
 }
 
 evalFunctions.q29 = (data) => {
@@ -663,9 +702,20 @@ evalFunctions.q29 = (data) => {
 
 evalFunctions.q30 = (data) => {
   // 30 - Will the game go into overtime?
-  // TODO - not implemented
-  console.log('Q30 - Not implemented!!!!');
-  return null;
+  let finalized = isFinal(data);
+  let value = 0;
+
+  if (typeof data.qtr === 'number') {
+    if (data.qtr >= 5) {
+      value = 1;
+    }
+  } else if (typeof data.qtr === 'string') {
+    if (data.qtr.toLowerCase().includes('overtime')) {
+      value = 1;
+    }
+  }
+
+  return { value, finalized };
 }
 
 module.exports = evalFunctions;

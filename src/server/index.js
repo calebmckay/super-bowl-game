@@ -19,12 +19,12 @@ require('./db/mongoose');
 const Question = require('./models/question');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(express.static("public"));
+app.use(express.static("dist"));
 
-app.get("/", async (req, res) => {
+app.get("/api/", async (req, res) => {
   try {
     console.log('> Initializing')
     Question.countDocuments({ gameId }, function(err,count){

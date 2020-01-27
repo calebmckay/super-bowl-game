@@ -10,7 +10,9 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["jest-expect-message"]
+    "setupFilesAfterEnv": [
+      "jest-expect-message"
+    ]
   },
   "author": "Caleb McKay",
   "license": "ISC",

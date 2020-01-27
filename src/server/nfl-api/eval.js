@@ -194,7 +194,7 @@ evalFunctions.q9 = (data) => {
   // touchdowns for each team, and see who has more
   let homeVal = 0, awayVal = 0;
   Object.keys(data.scrsummary).forEach((key) => {
-    scoreJSON = data.scrsummary[key];
+    const scoreJSON = data.scrsummary[key];
     if (scoreJSON.type === "TD") {
       if (scoreJSON.team === data.home.abbr) {
         homeVal++;
@@ -228,7 +228,7 @@ evalFunctions.q10 = (data) => {
   // field goals for each team, and see who has more
   let homeVal = 0, awayVal = 0;
   Object.keys(data.scrsummary).forEach((key) => {
-    scoreJSON = data.scrsummary[key];
+    const scoreJSON = data.scrsummary[key];
     if (scoreJSON.type === "FG") {
       if (scoreJSON.team === data.home.abbr) {
         homeVal++;
@@ -497,7 +497,7 @@ evalFunctions.q20 = (data) => {
     if (thisTeam.stats.kicking != null) {
       Object.keys(thisTeam.stats.kicking).forEach(function(key) {
         let thisKicker = thisTeam.stats.kicking[key];
-        if (thisKicker.fgm !== thisKicker.fga) {
+        if ((thisKicker.fgm !== thisKicker.fga) || thisKicker.xpmissed > 0) {
           finalized = true;
           value = 1;
         }
@@ -614,7 +614,7 @@ evalFunctions.q26 = (data) => {
     const thisDrive = data.drives[driveNum];
     Object.keys(thisDrive.plays).forEach((play) => {
       const thisPlay = thisDrive.plays[play];
-      if(thisPlay.note && thisPlay.note.match(/^2PS$/) !== null){
+      if(thisPlay.note && thisPlay.note.match(/^2P(S|R)$/) !== null) {
         finalized = true;
         value = 1;
         return true;

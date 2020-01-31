@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import QuestionList from './components/QuestionList';
+import './styles/styles.scss';
 
 import axios from 'axios';
 const reqUrl = `http://localhost:${process.env.PORT || 8080}/api`;
